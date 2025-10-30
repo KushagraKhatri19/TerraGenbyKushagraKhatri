@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TerraGen | AI Crop Advisor</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      color: #222;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 90%;
+      max-width: 450px;
+      transition: 0.3s;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    p {
+      margin-top: -5px;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #74ebd5;
+      box-shadow: 0 0 5px #74ebd5;
+    }
+
+    button {
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      border: none;
+      color: white;
+      padding: 12px;
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(116, 235, 213, 0.4);
+    }
+
+    .output {
+      margin-top: 25px;
+      font-size: 1.1rem;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌾 TerraGen</h1>
+    <p>AI-powered Crop Recommendation System</p>
+
+    <label for="soil">Soil Type:</label>
+    <select id="soil">
+      <option value="">-- Select Soil Type --</option>
+      <option value="Alluvial">Alluvial</option>
+      <option value="Black">Black</option>
+      <option value="Red">Red</option>
+      <option value="Laterite">Laterite</option>
+      <option value="Arid">Arid</option>
+      <option value="Saline">Saline</option>
+      <option value="Mountain">Mountain</option>
+      <option value="Peaty">Peaty</option>
+    </select>
+
+    <label for="location">Country:</label>
+    <select id="location"></select>
+
+    <button onclick="generate()">Generate Recommendation</button>
+
+    <div id="output" class="output"></div>
+  </div>
+
+  <footer>© 2025 TerraGen | Built by Kushagra Khatri</footer>
+
+  <script>
+    // 🌍 Local list of countries
+    const countries = [
+      "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", 
+      "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+      "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", 
+      "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", 
+      "Cameroon", "Canada", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", 
+      "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Dominican Republic", 
+      "Ecuador", "Egypt", "El Salvador", "Estonia", "Ethiopia", "Fiji", "Finland", "France", 
+      "Germany", "Ghana", "Greece", "Guatemala", "Honduras", "Hungary", "Iceland", "India", 
+      "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", 
+      "Kazakhstan", "Kenya", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", 
+      "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", 
+      "Malaysia", "Maldives", "Mali", "Malta", "Mauritius", "Mexico", "Moldova", "Monaco", 
+      "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nepal", 
+      "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", 
+      "Oman", "Pakistan", "Panama", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", 
+      "Qatar", "Romania", "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia", "Singapore", 
+      "Slovakia", "Slovenia", "Somalia", "South Africa", "South Korea", "Spain", "Sri Lanka", 
+      "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", 
+      "Thailand", "Togo", "Trinidad and Tobago", "Tunisia", "Turkey", "Uganda", "Ukraine", 
+      "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", 
+      "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    ];
+
+    // Populate dropdown
+    const dropdown = document.getElementById("location");
+    dropdown.innerHTML = '<option value="">-- Select Country --</option>';
+    countries.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      dropdown.appendChild(opt);
+    });
+
+    // Generate crop recommendation
+    async function generate() {
+      const soil = document.getElementById("soil").value;
+      const location = document.getElementById("location").value;
+      const outputDiv = document.getElementById("output");
+
+      if (!soil || !location) {
+        outputDiv.innerHTML = "⚠️ Please select both soil type and country.";
+        return;
+      }
+
+      const res = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ soil, location }),
+      });
+
+      const data = await res.json();
+      outputDiv.innerHTML = `<b>Recommended Crops:</b> ${data.recommendation}`;
+    }
+  </script>
+</body>
+</html>
